@@ -1,16 +1,32 @@
 //jshint esversion:6
+require('dotenv').config(); //to secure private files
 const express = require("express");   //to require express 
 const bodyParser = require("body-parser"); // to require bodyparser
 const mongoose = require("mongoose");   // to require mongoose which we install in our package.json
-const _ = require("lodash"); // it is used to convert letters to lowercase or uppercase
+const _ = require("lodash");           // it is used to convert letters to lowercase or uppercase
 const app = express();
+const PORT = process.env.PORT || 3000; 
 
 app.set('view engine', 'ejs');   //from ejs documentations of using ejs with express
 
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true })); //middleware used for pre-process req
 app.use(express.static("public")); // help to run css we need to put our css in public folder
 
-mongoose.connect("mongodb+srv://mayankpanwar08:mayank08@cluster0.izt7hju.mongodb.net/todolist3DB", { useNewUrlParser: true }); //to made a connection with the running server which will run with mongod command
+mongoose.set('strictQuery', false);
+//to made a connection with the running server which will run with mongod command
+
+async function connectDB() {
+    try {
+       const conn = await mongoose.connect(process.env.MONGO_URI);
+        
+       console.log("MongoDB Connected: " + conn.connection.host);
+ 
+    } catch(err) {
+       
+       console.log(err);
+       process.exit(1);
+    }
+}
 
 //Created Schema
 const itemsSchema = new mongoose.Schema({
@@ -142,11 +158,11 @@ app.post("/delete", function (req, res) {
   }
 
 });
-
-app.get("/about", function (req, res) {
-  res.render("about");
-});
-
-app.listen(3000, function () {
-  console.log("Server started on port 3000");
+// server started on both localhost:3000 as well as on cloud port
+connectDB().then( () => {
+ 
+  app.listen(PORT, function() {
+ 
+      console.log("Server started. Listening on port " + PORT);
+  });
 });
